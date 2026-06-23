@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TV Shows API</title>
+  <style>
+    * .rating { font-weight: bold; padding: 2px 8px; border-radius: 4px; color: white; }
+    .rating-1 { background: #e74c3c; }
+    .rating-2 { background: #e67e22; }
+    .rating-3 { background: #f1c40f; color: #333; }
+    .rating-4 { background: #2ecc71; }
+    .rating-5 { background: #27ae60; }
+    .badge { padding: 2px 8px; border-radius: 4px; font-size: 12px; color: white; }
+    .badge-explicit { background: #e74c3c; }
+    .badge-safe { background: #27ae60; }
+    { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; color: #333; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h1 { margin-bottom: 20px; color: #2c3e50; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background: #2c3e50; color: white; cursor: pointer; user-select: none; }
+    th:hover { background: #34495e; }
+    th.sorted::after { content: ' ▼'; }
+    th.sorted.asc::after { content: ' ▲'; }
+    button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .btn-edit { background: #3498db; color: white; margin-right: 5px; }
+    .btn-delete { background: #e74c3c; color: white; }
+    .btn-add { background: #27ae60; color: white; margin-bottom: 20px; }
+    .btn-save { background: #27ae60; color: white; }
+    .btn-cancel { background: #95a5a6; color: white; margin-right: 5px; }
+    .form-section { background: #f9f9f9; padding: 20px; border-radius: 5px; margin-bottom: 20px; display: none; }
+    .form-section.active { display: block; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+    .error { color: #e74c3c; font-size: 13px; margin-top: 5px; display: none; }
+    .error.visible { display: block; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; padding: 30px; border-radius: 8px; text-align: center; max-width: 400px; }
+    .modal-content p { margin-bottom: 20px; font-size: 16px; }
+    .modal-content button { margin: 0 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>TV Shows</h1>
+
+    <button class="btn-add" id="btn-add">+ Add Show</button>
+
+    <div class="form-section" id="form-section">
+      <h2 id="form-title">Add New Show</h2>
+      <form id="show-form">
+        <input type="hidden" id="show-id">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" required>
+          <span class="error" id="name-error">Name is required</span>
+        </div>
+        <div class="form-group">
+          <label for="channel">Channel</label>
+          <input type="text" id="channel" required>
+          <span class="error" id="channel-error">Channel is required</span>
+        </div>
+        <div class="form-group">
+          <label for="genre">Genre</label>
+          <input type="text" id="genre" required>
+          <span class="error" id="genre-error">Genre is required</span>
+        </div>
+        <div class="form-group">
+          <label for="rating">Rating (1-5)</label>
+          <input type="number" id="rating" min="1" max="5" required>
+          <span class="error" id="rating-error">Rating must be between 1 and 5</span>
+        </div>
+        <div class="form-group">
+          <label for="explicit">Explicit</label>
+          <select id="explicit">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-save">Save</button>
+        <button type="button" class="btn-cancel" id="btn-cancel">Cancel</button>
+      </form>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th data-sort="name">Name</th>
+          <th data-sort="channel">Channel</th>
+          <th data-sort="genre">Genre</th>
+          <th data-sort="rating">Rating</th>
+          <th>Explicit</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="shows-body"></tbody>
+    </table>
+  </div>
+
+  <div class="modal" id="delete-modal">
+    <div class="modal-content">
+      <p>Are you sure you want to delete this show?</p>
+      <button class="btn-delete" id="confirm-delete">Delete</button>
+      <button class="btn-cancel" id="cancel-delete">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    const API = '/api/v1/shows';
+    const tbody = document.getElementById('shows-body');
+    const formSection = document.getElementById('form-section');
+    const form = document.getElementById('show-form');
+    const formTitle = document.getElementById('form-title');
+    const btnAdd = document.getElementById('btn-add');
+    const btnCancel = document.getElementById('btn-cancel');
+    const deleteModal = document.getElementById('delete-modal');
+    const confirmDelete = document.getElementById('confirm-delete');
+    const cancelDelete = document.getElementById('cancel-delete');
+
+    let shows = [];
+    let sortBy = 'name';
+    let sortAsc = true;
+    let deleteId = null;
+
+    // Load shows
+    async function loadShows() {
+      const res = await fetch(API);
+      shows = await res.json();
+      render();
+    }
+
+    // Sort and render
+    function render() {
+      const sorted = [...shows].sort((a, b) => {
+        const aVal = sortBy === 'rating' ? a[sortBy] : (a[sortBy] || '').toString().toLowerCase();
+        const bVal = sortBy === 'rating' ? b[sortBy] : (b[sortBy] || '').toString().toLowerCase();
+        if (aVal < bVal) return sortAsc ? -1 : 1;
+        if (aVal > bVal) return sortAsc ? 1 : -1;
+        return 0;
+      });
+
+      tbody.innerHTML = sorted.map(show => `
+        <tr>
+          <td>${show.name}</td>
+          <td>${show.channel}</td>
+          <td>${show.genre}</td>
+          <td><span class="rating rating-${show.rating}">${show.rating}/5</span></td>
+          <td><span class="badge ${show.explicit ? 'badge-explicit' : 'badge-safe'}">${show.explicit ? 'Yes' : 'No'}</span></td>
+          <td>
+            <button class="btn-edit" onclick="editShow(${show.id})">Edit</button>
+            <button class="btn-delete" onclick="askDelete(${show.id})">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+
+      document.querySelectorAll('th').forEach(th => {
+        th.classList.remove('sorted', 'asc');
+        if (th.dataset.sort === sortBy) {
+          th.classList.add('sorted');
+          if (sortAsc) th.classList.add('asc');
+        }
+      });
+    }
+
+    // Sort handler
+    document.querySelectorAll('th[data-sort]').forEach(th => {
+      th.addEventListener('click', () => {
+        if (sortBy === th.dataset.sort) sortAsc = !sortAsc;
+        else { sortBy = th.dataset.sort; sortAsc = true; }
+        render();
+      });
+    });
+
+    // Add button
+    btnAdd.addEventListener('click', () => {
+      formTitle.textContent = 'Add New Show';
+      form.reset();
+      document.getElementById('show-id').value = '';
+      formSection.classList.add('active');
+      hideErrors();
+    });
+
+    // Cancel button
+    btnCancel.addEventListener('click', () => {
+      formSection.classList.remove('active');
+      hideErrors();
+    });
+
+    // Edit
+    window.editShow = function(id) {
+      const show = shows.find(s => s.id === id);
+      if (!show) return;
+      formTitle.textContent = 'Edit Show';
+      document.getElementById('show-id').value = show.id;
+      document.getElementById('name').value = show.name;
+      document.getElementById('channel').value = show.channel;
+      document.getElementById('genre').value = show.genre;
+      document.getElementById('rating').value = show.rating;
+      document.getElementById('explicit').value = show.explicit;
+      formSection.classList.add('active');
+      hideErrors();
+    };
+
+    // Delete modal
+    window.askDelete = function(id) {
+      deleteId = id;
+      deleteModal.classList.add('active');
+    };
+
+    cancelDelete.addEventListener('click', () => {
+      deleteModal.classList.remove('active');
+      deleteId = null;
+    });
+
+    confirmDelete.addEventListener('click', async () => {
+      if (!deleteId) return;
+      await fetch(`${API}/${deleteId}`, { method: 'DELETE' });
+      deleteModal.classList.remove('active');
+      deleteId = null;
+      loadShows();
+    });
+
+    // Validation
+    function validate() {
+      let valid = true;
+      const name = document.getElementById('name').value.trim();
+      const channel = document.getElementById('channel').value.trim();
+      const genre = document.getElementById('genre').value.trim();
+      const rating = parseInt(document.getElementById('rating').value);
+
+      if (!name) { showError('name-error'); valid = false; } else hideError('name-error');
+      if (!channel) { showError('channel-error'); valid = false; } else hideError('channel-error');
+      if (!genre) { showError('genre-error'); valid = false; } else hideError('genre-error');
+      if (!rating || rating < 1 || rating > 5) { showError('rating-error'); valid = false; } else hideError('rating-error');
+
+      return valid;
+    }
+
+    function showError(id) { document.getElementById(id).classList.add('visible'); }
+    function hideError(id) { document.getElementById(id).classList.remove('visible'); }
+    function hideErrors() { document.querySelectorAll('.error').forEach(e => e.classList.remove('visible')); }
+
+    // Submit form
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!validate()) return;
+
+      const id = document.getElementById('show-id').value;
+      const data = {
+        name: document.getElementById('name').value.trim(),
+        channel: document.getElementById('channel').value.trim(),
+        genre: document.getElementById('genre').value.trim(),
+        rating: parseInt(document.getElementById('rating').value),
+        explicit: document.getElementById('explicit').value === 'true'
+      };
+
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `${API}/${id}` : API;
+
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      formSection.classList.remove('active');
+      loadShows();
+    });
+
+    // Load on start
+    loadShows();
+  </script>
+</body>
+</html>
