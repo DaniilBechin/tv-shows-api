@@ -1,15 +1,39 @@
-# Test Driven Development With Node, Postgres, and Knex (Red/Green/Refactor)
+# TV Shows API
 
-## Want to learn how to build this project?
+REST API для управления каталогом телешоу с веб-интерфейсом.
 
-Check out the [blog post](http://mherman.org/blog/2016/04/28/test-driven-development-with-node).
+## Ссылки
 
-## Want to use this project?
+- **Деплой:** (https://tv-shows-api-7jzs.onrender.com)
+- **Swagger:** (https://tv-shows-api-7jzs.onrender.com/api-docs)
+- **Демо-видео:** (https://drive.google.com/file/d/10j3GgXAN4pIxp14RM2n1LIgETp-KqKpP/view?usp=sharing)
 
-1. Fork/Clone
-1. Install dependencies - `npm install`
-1. Create two local Postgres databases - `mocha_chai_tv_shows` and `mocha_chai_tv_shows_test`
-1. Migrate - `knex migrate:latest --env development`
-1. Seed - `knex seed:run --env development`
-1. Run the development server - `gulp`
-1. Test - `npm test`
+## Функции
+
+- Просмотр списка шоу в таблице
+- Добавление, редактирование и удаление шоу
+- Сортировка по названию, каналу, жанру и рейтингу
+- Валидация форм с выводом ошибок
+- Подтверждение удаления через модальное окно
+- Swagger-документация API
+- Тёмная тема
+
+## Технологии
+
+- **Backend:** Node.js, Express
+- **Database:** PostgreSQL, Knex (миграции и сиды)
+- **Frontend:** HTML, CSS, JavaScript (Vanilla)
+- **Документация:** Swagger (swagger-jsdoc, swagger-ui-express)
+
+## Локальный запуск
+
+```bash
+# Установка зависимостей
+npm install
+
+# Настройка базы данных (PostgreSQL должен быть установлен)
+npx knex migrate:latest --env development
+npx knex seed:run --env development
+
+# Запуск сервера
+npm start
