@@ -1,39 +1,40 @@
 # TV Shows API
 
-REST API для управления каталогом телешоу с веб-интерфейсом.
+REST API for managing a TV shows catalog with a web interface.
 
-## Ссылки
+## Links
 
-- **Деплой:** (https://tv-shows-api-7jzs.onrender.com)
-- **Swagger:** (https://tv-shows-api-7jzs.onrender.com/api-docs)
-- **Демо-видео:** (https://drive.google.com/file/d/10j3GgXAN4pIxp14RM2n1LIgETp-KqKpP/view?usp=sharing)
+- **Live Demo:** (https://tv-shows-api-7jzs.onrender.com)
+- **Swagger Docs:** (https://tv-shows-api-7jzs.onrender.com/api-docs)
+- **Demo Video:** (https://drive.google.com/file/d/10j3GgXAN4pIxp14RM2n1LIgETp-KqKpP/view?usp=sharing)
+- **Codefactor** (https://www.codefactor.io/repository/github/daniilbechin/tv-shows-api/overview/main)
 
-## Функции
+## Features
 
-- Просмотр списка шоу в таблице
-- Добавление, редактирование и удаление шоу
-- Сортировка по названию, каналу, жанру и рейтингу
-- Валидация форм с выводом ошибок
-- Подтверждение удаления через модальное окно
-- Swagger-документация API
-- Тёмная тема
+- View all shows in a table
+- Add, edit, and delete shows
+- Sort by name, channel, genre, and rating
+- Form validation with error messages
+- Delete confirmation modal
+- Swagger API documentation
+- Dark theme UI
 
-## Технологии
+## Tech Stack
 
 - **Backend:** Node.js, Express
-- **Database:** PostgreSQL, Knex (миграции и сиды)
+- **Database:** PostgreSQL, Knex (migrations & seeds)
 - **Frontend:** HTML, CSS, JavaScript (Vanilla)
-- **Документация:** Swagger (swagger-jsdoc, swagger-ui-express)
+- **Documentation:** Swagger (swagger-jsdoc, swagger-ui-express)
 
-## Локальный запуск
+## Getting Started
 
 ```bash
-# Установка зависимостей
+# Install dependencies
 npm install
 
-# Настройка базы данных (PostgreSQL должен быть установлен)
+# Set up database (PostgreSQL required)
 npx knex migrate:latest --env development
 npx knex seed:run --env development
 
-# Запуск сервера
+# Start server
 npm start
